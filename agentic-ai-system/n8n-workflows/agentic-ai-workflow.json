@@ -1,0 +1,303 @@
+{
+  "name": "Agentic AI Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-task",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "AI Task Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "ai-task-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"task\": $json.body.task, \"context\": $json.body.context || {}, \"tools\": $json.body.tools || null, \"max_iterations\": $json.body.max_iterations || 10 }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "agent-request",
+      "name": "Run AI Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "chat-webhook",
+      "name": "Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 500],
+      "webhookId": "chat-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"messages\": [{ \"role\": \"user\", \"content\": $json.body.message }], \"model\": $json.body.model || \"aletheia-3b\", \"temperature\": $json.body.temperature || 0.7 }) }}",
+        "options": {}
+      },
+      "id": "chat-request",
+      "name": "Chat Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"response\": $json.choices[0].message.content } }}",
+        "options": {}
+      },
+      "id": "chat-response",
+      "name": "Chat Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 700]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"task\": \"Generate a daily summary report of system status and any important updates\",\n  \"tools\": [\"get_current_time\", \"http_request\"],\n  \"max_iterations\": 5\n}",
+        "options": {}
+      },
+      "id": "daily-agent",
+      "name": "Daily Agent Task",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 700]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "Check Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 700]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=📊 Daily AI Report\n\nStatus: {{ $json.status }}\nIterations: {{ $json.total_iterations }}\n\nResult:\n{{ $json.result }}",
+        "additionalFields": {}
+      },
+      "id": "telegram-notify",
+      "name": "Telegram Notification",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1000, 650],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai-agent@yourcompany.com",
+        "toEmail": "admin@yourcompany.com",
+        "subject": "=Daily AI Agent Report - {{ $now.format('yyyy-MM-dd') }}",
+        "text": "=AI Agent Daily Report\n\nStatus: {{ $json.status }}\nTotal Iterations: {{ $json.total_iterations }}\n\nResult:\n{{ $json.result }}\n\nTool Calls:\n{{ JSON.stringify($json.tool_calls, null, 2) }}",
+        "options": {}
+      },
+      "id": "email-notify",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1000, 750],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "AI Task Webhook": {
+      "main": [
+        [
+          {
+            "node": "Run AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Webhook": {
+      "main": [
+        [
+          {
+            "node": "Chat Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Completion": {
+      "main": [
+        [
+          {
+            "node": "Chat Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Daily Agent Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Agent Task": {
+      "main": [
+        [
+          {
+            "node": "Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "main": [
+        [
+          {
+            "node": "Telegram Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "AI Agent",
+      "id": "1"
+    }
+  ],
+  "triggerCount": 3,
+  "pinData": {}
+}

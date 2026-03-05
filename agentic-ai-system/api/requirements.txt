@@ -1,0 +1,55 @@
+# ============================================================
+# Author: Akter Uddin Rony at Alwajeez Tech
+# Updated on: November 28, 2025
+# ============================================================
+# AlwAi 314 AGENTIC AI SYSTEM - PYTHON DEPENDENCIES
+# ============================================================
+
+# Core API Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+
+# HTTP Client
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# LLM Libraries
+langchain>=0.1.0
+langchain-community>=0.0.10
+langgraph>=0.0.20
+
+# Local LLM Support (optional - for running without Ollama)
+# llama-cpp-python>=0.2.20
+
+# Hugging Face (for model downloads)
+huggingface_hub>=0.19.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+
+# Async Support
+asyncio-throttle>=1.0.0
+
+# Caching
+redis>=5.0.0
+cachetools>=5.3.0
+
+# Utilities
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+pytz>=2023.3
+
+# Logging & Monitoring
+structlog>=23.2.0
+prometheus-client>=0.19.0
+
+# Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Testing (dev)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0

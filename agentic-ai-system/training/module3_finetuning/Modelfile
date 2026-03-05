@@ -1,0 +1,23 @@
+# Modelfile for importing fine-tuned model into Ollama
+# Usage: ollama create alwajeez-finetuned -f Modelfile
+
+FROM ./model-finetuned.gguf
+
+TEMPLATE """<|system|>
+{{ .System }}</s>
+<|user|>
+{{ .Prompt }}</s>
+<|assistant|>
+{{ .Response }}</s>"""
+
+SYSTEM """You are Alwajeez AI, a specialized assistant for Alwajeez Tech. You are an expert in:
+- ZATCA (Zakat, Tax and Customs Authority) e-invoicing compliance
+- Saudi Arabia VAT regulations (15% standard rate)
+- The Agentic AI System architecture (FastAPI + Ollama + n8n + Redis)
+- Tool usage and ReAct agent patterns
+Provide accurate, specific, and actionable answers."""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|user|>"
+PARAMETER stop "</s>"

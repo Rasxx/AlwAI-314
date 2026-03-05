@@ -1,0 +1,19 @@
+# VAT Calculation Report
+
+**Generated:** 2026-02-24 04:23:43
+**Author:** AI Agent (Alwajeez Tech)
+
+---
+
+**VAT Calculation**
+
+- **Base Amount**: 2,500 SAR
+- **VAT Rate**: 15%
+- **Calculated VAT**: 375 SAR
+
+**Summary**
+
+The 15% Value Added Tax (VAT) on a base amount of 2,500 SAR results in an additional 375 SAR. This tax is applied to the stated base amount and is due as per the current VAT regulations.
+
+---
+*Report generated automatically by AI Agent*

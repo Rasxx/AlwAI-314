@@ -1,0 +1,308 @@
+{
+  "name": "ZATCA Compliance Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zatca-validate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "zatca-webhook",
+      "name": "ZATCA Validation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "zatca-validate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"task\": \"Validate this invoice for ZATCA Phase-2 compliance. Check all required fields, QR code requirements, and XML structure. Invoice data: \" + JSON.stringify($json.body.invoice), \"context\": { \"compliance_type\": \"ZATCA Phase-2\", \"invoice_type\": $json.body.invoice_type || \"standard\" }, \"tools\": [\"zatca_compliance\", \"calculator\", \"http_request\"], \"max_iterations\": 8 }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "zatca-agent",
+      "name": "ZATCA Compliance Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.result }}",
+              "rightValue": "compliant",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-compliance",
+      "name": "Check Compliance",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"compliant\", \"message\": \"Invoice passes ZATCA Phase-2 validation\", \"details\": $json.result, \"steps\": $json.steps } }}",
+        "options": {}
+      },
+      "id": "compliant-response",
+      "name": "Compliant Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"non-compliant\", \"message\": \"Invoice requires corrections for ZATCA compliance\", \"issues\": $json.result, \"recommendations\": $json.tool_calls } }}",
+        "options": {}
+      },
+      "id": "non-compliant-response",
+      "name": "Non-Compliant Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zatca-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "generate-webhook",
+      "name": "ZATCA Invoice Generator",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 600],
+      "webhookId": "zatca-generate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"task\": \"Generate a ZATCA Phase-2 compliant e-invoice XML with the following details: Seller: \" + $json.body.seller_name + \", VAT: \" + $json.body.seller_vat + \", Buyer: \" + $json.body.buyer_name + \", Items: \" + JSON.stringify($json.body.items) + \". Include all mandatory fields, calculate VAT correctly, and generate QR code data.\", \"context\": { \"compliance_type\": \"ZATCA Phase-2\", \"invoice_type\": $json.body.invoice_type || \"388\" }, \"tools\": [\"zatca_compliance\", \"calculator\", \"file_operations\"], \"max_iterations\": 10 }) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "generate-agent",
+      "name": "Invoice Generation Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"generated\", \"invoice_xml\": $json.result, \"compliance_steps\": $json.steps, \"calculations\": $json.tool_calls } }}",
+        "options": {}
+      },
+      "id": "generate-response",
+      "name": "Invoice Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 600]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "erp-invoice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "erp-webhook",
+      "name": "ERP Integration Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 850],
+      "webhookId": "erp-invoice"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/v1/agent/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ \"task\": \"Process this ERP invoice for ZATCA submission. 1) Validate all fields, 2) Generate compliant XML, 3) Calculate hash and QR code, 4) Prepare for ZATCA API submission. Invoice: \" + JSON.stringify($json.body), \"context\": { \"source\": \"ALZERP\", \"environment\": $json.body.environment || \"sandbox\" }, \"tools\": [\"zatca_compliance\", \"calculator\", \"http_request\", \"file_operations\"], \"max_iterations\": 12 }) }}",
+        "options": {
+          "timeout": 240000
+        }
+      },
+      "id": "erp-agent",
+      "name": "ERP to ZATCA Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 850]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "erp-response",
+      "name": "ERP Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 850]
+    }
+  ],
+  "connections": {
+    "ZATCA Validation Webhook": {
+      "main": [
+        [
+          {
+            "node": "ZATCA Compliance Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ZATCA Compliance Agent": {
+      "main": [
+        [
+          {
+            "node": "Check Compliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Compliance": {
+      "main": [
+        [
+          {
+            "node": "Compliant Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Non-Compliant Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ZATCA Invoice Generator": {
+      "main": [
+        [
+          {
+            "node": "Invoice Generation Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Generation Agent": {
+      "main": [
+        [
+          {
+            "node": "Invoice Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERP Integration Webhook": {
+      "main": [
+        [
+          {
+            "node": "ERP to ZATCA Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERP to ZATCA Agent": {
+      "main": [
+        [
+          {
+            "node": "ERP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ZATCA",
+      "id": "2"
+    },
+    {
+      "name": "Compliance",
+      "id": "3"
+    },
+    {
+      "name": "AI Agent",
+      "id": "1"
+    }
+  ],
+  "triggerCount": 3,
+  "pinData": {}
+}

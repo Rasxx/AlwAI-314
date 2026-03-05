@@ -1,0 +1,150 @@
+# ============================================================
+# Author: Akter Uddin Rony at Alwajeez Tech
+# Updated on: December 22, 2025
+# ============================================================
+
+version: '3.8'
+
+# ============================================================
+# AGENTIC AI SYSTEM - COMPLETE DOCKER STACK
+# ============================================================
+# Services:
+#   - Ollama: LLM Backend
+#   - Agentic API: FastAPI server with ReAct agent
+#   - n8n: Workflow automation
+#   - Redis: Caching and message queue
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # OLLAMA - LLM Backend
+  # ----------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: agentic-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./models:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # AGENTIC API SERVER
+  # ----------------------------------------------------------
+  agentic-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: agentic-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - MODEL_NAME=aletheia-3b
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
+      - MAX_ITERATIONS=10
+      - DEFAULT_TEMPERATURE=0.7
+      - TIMEOUT=120
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./api:/app
+      - ./data:/app/data
+      - ./output:/app/output
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # N8N - Workflow Automation
+  # ----------------------------------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: agentic-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=agentic123
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Riyadh
+      - TZ=Asia/Riyadh
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/workflows
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # REDIS - Caching & Message Queue (Optional)
+  # ----------------------------------------------------------
+  redis:
+    image: redis:alpine
+    container_name: agentic-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ----------------------------------------------------------
+  # MODEL LOADER - Initialize Ollama with model
+  # ----------------------------------------------------------
+  model-loader:
+    image: curlimages/curl:latest
+    container_name: agentic-model-loader
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        sleep 10 &&
+        echo 'Pulling llama3.2:3b model...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llama3.2:3b\"}' &&
+        echo 'Model loaded successfully!'
+      "
+    restart: "no"
+
+volumes:
+  ollama_data:
+    name: agentic_ollama_data
+  n8n_data:
+    name: agentic_n8n_data
+  redis_data:
+    name: agentic_redis_data
+
+networks:
+  default:
+    name: agentic-network

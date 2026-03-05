@@ -1,0 +1,8 @@
+# Module 1: LangChain Agents
+# Run locally - connects to Ollama at localhost:11434
+
+langchain>=0.3.0
+langchain-ollama>=0.3.0
+langgraph>=0.2.0
+langchain-core>=0.3.0
+httpx>=0.25.0

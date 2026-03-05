@@ -1,0 +1,12 @@
+# Module 2: RAG Pipeline
+# Run locally - connects to Ollama at localhost:11434
+
+langchain>=0.3.0
+langchain-ollama>=0.3.0
+langchain-chroma>=0.2.0
+langchain-core>=0.3.0
+langchain-text-splitters>=0.3.0
+chromadb>=0.5.0
+pypdf>=4.0.0
+beautifulsoup4>=4.12.0
+httpx>=0.25.0

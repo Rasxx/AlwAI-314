@@ -1,0 +1,38 @@
+Alwajeez Tech - Frequently Asked Questions (FAQ)
+==================================================
+
+Q1: What is the Agentic AI System?
+A1: The Agentic AI System is an intelligent agent platform developed by Alwajeez Tech. It uses a ReAct (Reasoning + Acting) loop to autonomously break down tasks, call tools, and produce results. It is built with FastAPI for the API layer and uses Ollama for local LLM inference. The system is fully self-hosted and does not require external cloud AI APIs.
+
+Q2: What models does the system support?
+A2: The system primarily uses Ollama for local model inference. The default model is llama3.2:3b. You can use any model available through Ollama including llama3.2:1b, llama3.1:8b, mistral:7b, codellama, and custom fine-tuned models. Models are pulled automatically when first requested.
+
+Q3: How does the ReAct agent work?
+A3: The ReAct agent follows a loop of Thought -> Action -> Observation. First, it thinks about the task and decides what to do. Then it takes an action by calling a tool (calculator, web search, file operations, etc.). It observes the result, then decides whether to take another action or provide a final answer. The maximum number of iterations is configurable (default: 10).
+
+Q4: What is ZATCA and why is it important?
+A4: ZATCA stands for Zakat, Tax and Customs Authority, the Saudi Arabian government body responsible for tax collection and customs regulation. ZATCA mandates electronic invoicing (e-invoicing) for all businesses in Saudi Arabia. Phase 1 requires generating invoices in a specific format, while Phase 2 requires real-time integration with ZATCA's systems for invoice clearance and reporting.
+
+Q5: What is the VAT rate in Saudi Arabia?
+A5: The standard VAT (Value Added Tax) rate in Saudi Arabia is 15%. This rate was increased from 5% to 15% in July 2020. Certain supplies are zero-rated (0%) such as exports and international transportation, while some supplies are exempt from VAT entirely, such as financial services and residential real estate.
+
+Q6: How do I connect to the API?
+A6: The FastAPI server runs on port 8000 and provides OpenAI-compatible endpoints. You can send chat requests to POST /v1/chat/completions, run agent tasks via POST /v1/agent/run, list available tools at GET /v1/tools, and check system health at GET /health. All endpoints accept and return JSON.
+
+Q7: How does the tool system work?
+A7: Tools are defined as ToolDefinition objects with a name, description, and parameter schema. The ToolExecutor class handles execution of each tool. When the agent decides to use a tool, it formats an ACTION line with the tool name and parameters. The system parses this, executes the tool, and returns the result as an OBSERVATION to the agent.
+
+Q8: What is n8n and how does it integrate?
+A8: n8n is an open-source workflow automation platform that runs on port 5678. It connects to the Agentic AI System via webhooks. When an event occurs in n8n, it can trigger the AI agent to process a task. Conversely, the agent can use the send_webhook tool to push data into n8n workflows. This enables building complex automation pipelines combining AI reasoning with external services.
+
+Q9: What are the system requirements?
+A9: The system requires Docker and Docker Compose for deployment. For GPU acceleration with Ollama, an NVIDIA GPU with CUDA support is recommended. Minimum requirements: 8GB RAM, 20GB disk space. For optimal performance with llama3.2:3b: 16GB RAM, NVIDIA GPU with 4GB+ VRAM.
+
+Q10: How is the system deployed?
+A10: The system is deployed using Docker Compose. The docker-compose.yml file defines four services: Ollama (LLM backend), Agentic API (FastAPI server), n8n (workflow automation), and Redis (caching). A model-loader service automatically pulls the required LLM model on first startup. All services communicate over a shared Docker network.
+
+Q11: Can I fine-tune models for specific domains?
+A11: Yes, you can fine-tune models using techniques like LoRA (Low-Rank Adaptation) and QLoRA (Quantized LoRA). The fine-tuned model can be exported in GGUF format and imported into Ollama using a Modelfile. This allows you to create domain-specific models for ZATCA compliance, customer support, or other specialized tasks while keeping inference local.
+
+Q12: What is the difference between the chat endpoint and the agent endpoint?
+A12: The chat endpoint (/v1/chat/completions) provides direct LLM inference - it sends your message to the model and returns the response. The agent endpoint (/v1/agent/run) uses the ReAct loop, which means the AI can reason about the task, call tools, observe results, and iterate until it reaches a final answer. Use chat for simple questions and agent for complex tasks requiring tool use.

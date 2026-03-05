@@ -1,0 +1,48 @@
+Alwajeez Tech - Company Overview
+=================================
+
+About Alwajeez Tech
+-------------------
+Alwajeez Tech is a technology company based in Saudi Arabia specializing in AI-powered business solutions. The company focuses on developing intelligent systems that help businesses automate their operations, comply with government regulations, and improve efficiency.
+
+Core Products and Services
+--------------------------
+1. Agentic AI System: An intelligent agent platform built with FastAPI and Ollama that provides autonomous task execution, tool calling, and workflow automation. The system uses a ReAct (Reasoning + Acting) agent loop to break down complex tasks into steps.
+
+2. ZATCA Compliance Solutions: Automated e-invoicing and tax compliance tools that help businesses comply with Saudi Arabia's Zakat, Tax and Customs Authority (ZATCA) regulations. This includes Phase 2 integration for real-time invoice reporting.
+
+3. Workflow Automation: Integration with n8n for building automated business workflows that connect the AI agent with external services, databases, and APIs.
+
+Technical Architecture
+----------------------
+The Agentic AI System consists of the following components:
+
+- FastAPI Server (Port 8000): The main API server that exposes OpenAI-compatible endpoints for chat completions, agent execution, and tool management. It implements a custom ReAct agent with support for multiple built-in tools.
+
+- Ollama LLM Backend (Port 11434): Runs large language models locally, providing fast inference without cloud API dependencies. The default model is llama3.2:3b, optimized for instruction following and tool use.
+
+- n8n Workflow Engine (Port 5678): A visual workflow automation platform that connects to the AI agent via webhooks. It enables building complex business processes that combine AI reasoning with external service integrations.
+
+- Redis Cache (Port 6379): Provides caching for frequently used data and serves as a message queue for asynchronous task processing.
+
+Built-in Tools
+--------------
+The Agentic AI System includes the following built-in tools:
+
+- Calculator: Evaluates mathematical expressions safely.
+- Web Search: Searches the internet for current information (requires API integration).
+- File Operations: Read, write, and list files within designated directories.
+- HTTP Request: Makes HTTP requests to external APIs.
+- ZATCA Compliance: Validates and generates ZATCA-compliant e-invoices.
+- Webhook Sender: Sends data to n8n webhooks for workflow automation.
+- Time Service: Gets the current date and time in any timezone.
+
+Team and Location
+-----------------
+Alwajeez Tech is headquartered in Riyadh, Saudi Arabia. The development team includes AI engineers, full-stack developers, and domain experts in Saudi regulatory compliance. The company serves clients across the GCC region.
+
+Contact Information
+-------------------
+Website: www.alwajeez.tech
+Location: Riyadh, Saudi Arabia
+Timezone: Asia/Riyadh (UTC+3)

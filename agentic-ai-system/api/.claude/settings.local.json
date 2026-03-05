@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c \"taskkill /PID 14716 /F\")",
+      "Bash(python:*)",
+      "Bash(cmd /c \"taskkill /F /IM python.exe\":*)",
+      "Bash(netstat:*)",
+      "Bash(cmd /c \"taskkill /F /PID 74308\")",
+      "Bash(powershell:*)"
+    ]
+  }
+}

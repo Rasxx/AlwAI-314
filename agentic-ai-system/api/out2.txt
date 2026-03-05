@@ -1,0 +1,13 @@
+﻿--- Test 1: Health Check ---
+Status: 200
+Response: {'status': 'healthy', 'ollama': 'healthy', 'model': 'gpt-oss:20b-cloud', 'timestamp': '2026-03-02T23:46:59.879620'}
+
+--- Test 2: Ingest Document ---
+Status: 500
+Response: Internal Server Error
+
+--- Test 3: RAG Query ---
+Status: 400
+Question: 
+Answer: 
+Sources: 0 chunks used
